@@ -36,14 +36,14 @@ def find_season(year, month):
         return year - 1
 
 
-def get_exact_trimmed_geom(image, crs=3031, step=4):
+def get_exact_trimmed_geom(image, crs=3031, step=48):
+    xs, ys = [], []
+    ds = rasterio.open(image)
+    # get source and target crs
+    src_crs = ds.crs
+    src_trans = ds.transform
+    target_crs = from_epsg(crs)
     try:
-        xs, ys = [], []
-        ds = rasterio.open(image)
-        # get source and target crs
-        src_crs = ds.crs
-        src_trans = ds.transform
-        target_crs = from_epsg(crs)
         # read raster
         if 'P1BS' in image:
             inband = np.array(ds.read(), dtype=np.uint8)
@@ -89,7 +89,17 @@ def get_exact_trimmed_geom(image, crs=3031, step=4):
         # return geometry
         return mapping(target_pol.geometry)['features'][0]['geometry']
     except:
-        return None
+        # switch to bounding box
+        bbox = ds.bounds
+        geom = Polygon([[bbox[0], bbox[1]],
+                        [bbox[2], bbox[1]],
+                        [bbox[2], bbox[3]],
+                        [bbox[0], bbox[3]],
+                        [bbox[0], bbox[1]]])
+        src_pol = gpd.GeoDataFrame(crs=src_crs, data={'geometry': [geom]}, index=[0])
+        target_pol = src_pol.to_crs(target_crs)
+        # return geometry
+        return mapping(target_pol.geometry)['features'][0]['geometry']
 
 
 def find_day_of_season(year, month, day, season):
@@ -288,9 +298,7 @@ if __name__ == "__main__":
 
     files = []
     for (dirpath, dirnames, filenames) in os.walk(args.input):
-        raw = [os.path.join(dirpath, file) for file in filenames if file.endswith('.tif')]
-        # get only multispectral
-        files += [path for path in raw if rasterio.open(path).count > 1]
+        files += [os.path.join(dirpath, file) for file in filenames if file.endswith('.tif') and 'M1BS' in file]
 
     output = args.output
     output_dir, output_shapefile = os.path.split(args.output)
@@ -303,4 +311,5 @@ if __name__ == "__main__":
     results = bulk_process_footprints(files, output, crs=args.out_crs, cores=args.cores, log_file=log_file)
 
     with open(log_file, 'w') as log:
-        print(f"Finished processing {len(results['succeeded'])} (of {len(files)}) rasters in {datetime.datetime.now() - start_time}", file=log)
+        print(f"Finished processing {len(results['succeeded'])} ",
+              f"(of {len(files)}) rasters in {datetime.datetime.now() - start_time}", file=log)
