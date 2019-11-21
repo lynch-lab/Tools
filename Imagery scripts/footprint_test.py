@@ -16,7 +16,7 @@ import re
 import time
 
 def FindSeason(year,month):
-   if (month >= 6 and month <= 11):
+   if (month >= 6 and month <= 10):
        return year
    elif (month <= 5):
        return year-1
