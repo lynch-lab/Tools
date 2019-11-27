@@ -3,14 +3,13 @@ ssh -Y NAME@login.seawulf.stonybrook.edu
 
 #Once logged in
 module load shared
-module load torque/6.1.1 #The torque module may change versions, try hitting tab to autocomplete
-qsub -I -X -q debug
+module load slurm
+srun -p short-28core -t 02:00:00 --pty bash # adjust queue and time as needed, '--pty bash -i' gives interactive mode
 
 #Now open a SECOND terminal and login as before
 #Once you log into the head node, you are now going to login to the compute node just assigned to you in the other terminal
 ssh -X sn146     #use whatever is on the prompt in the original Terminal window
-module load shared
-module load torque/6.1.1   #The torque module may change versions, try hitting tab to autocomplete
+module load shared   
 module load qgis
 qgis     #this should launch qgis
 
