@@ -4,7 +4,9 @@ ssh -Y NAME@login.seawulf.stonybrook.edu
 #Once logged in
 module load shared
 module load slurm
-srun -p short-28core -t 02:00:00 --pty bash # adjust queue and time as needed, '--pty bash -i' gives interactive mode
+srun -p short-28core -t 02:00:00 --pty bash # adjust queue and time as needed, 
+                                            # can also add other sbatch options
+                                            #'--pty bash' gives interactive mode
 
 #Now open a SECOND terminal and login as before
 #Once you log into the head node, you are now going to login to the compute node just assigned to you in the other terminal
